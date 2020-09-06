@@ -1,21 +1,30 @@
-import React, { useState, useEffect } from 'react';
-import './App.css';
+import React, { useState } from 'react';
+import { BrowserRouter as Router, Route } from "react-router-dom";
+import CssBaseline from '@material-ui/core/CssBaseline';
+
+import { AuthContext } from "./context/auth";
+import PrivateRoute from './PrivateRoute';
+import SignUp from './components/SignUp';
+import SignIn from './components/SignIn';
+import User from './components/User';
 
 function App() {
-  const [serverStatus, setServerStatus] = useState('offline');
+  const [accessToken, setAccessToken] = useState(localStorage.getItem("accessToken"));
 
-  useEffect(() => {
-    fetch('api/status').then(res => res.json()).then(data => {
-      setServerStatus(data.status);
-    });
-  }, []);
+  const handleTokenChange = (token) => {
+    localStorage.setItem("accessToken", token);
+    setAccessToken(token);
+  }
 
   return (
-    <div className="App">
-      <header className="App-header">
-        <p>Server is {serverStatus}</p>
-      </header>
-    </div>
+    <AuthContext.Provider value={{ accessToken, setAccessToken: handleTokenChange}}>
+      <CssBaseline />
+      <Router>
+        <Route exact path="/signup" component={SignUp} />
+        <Route exact path="/signin" component={SignIn} />
+        <PrivateRoute exact path="/me" component={User} />
+      </Router>
+    </AuthContext.Provider>
   );
 }
 

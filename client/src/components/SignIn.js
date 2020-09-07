@@ -1,5 +1,6 @@
 import React from 'react';
 import { Redirect, Link as RouterLink } from "react-router-dom";
+import axios from 'axios';
 import Avatar from '@material-ui/core/Avatar';
 import Button from '@material-ui/core/Button';
 import TextField from '@material-ui/core/TextField';
@@ -41,8 +42,15 @@ function SignIn(props) {
   const referer = props.location.state?.referer || '/me';
 
   function onSubmit(data) {
-    console.log(data);
-    setAccessToken('accessToken');
+    axios.post("/api/auth/signin", data).then(result => {
+      if (result.status === 200) {
+        setAccessToken(result.data.access_token);
+      } else {
+        console.log("failed");
+      }
+    }).catch(e => {
+      console.log("error");
+    });
 }
 
   if (accessToken) {

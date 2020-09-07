@@ -1,5 +1,6 @@
 import React from 'react';
-import { Link as RouterLink} from 'react-router-dom'
+import { Link as RouterLink, Redirect} from 'react-router-dom'
+import axios from 'axios';
 import Avatar from '@material-ui/core/Avatar';
 import Button from '@material-ui/core/Button';
 import TextField from '@material-ui/core/TextField';
@@ -10,6 +11,7 @@ import Typography from '@material-ui/core/Typography';
 import { makeStyles } from '@material-ui/core/styles';
 import Container from '@material-ui/core/Container';
 import { useForm } from "react-hook-form";
+import { useAuth } from "../context/auth";
 
 const useStyles = makeStyles((theme) => ({
   paper: {
@@ -33,10 +35,23 @@ const useStyles = makeStyles((theme) => ({
 
 function SignUp() {
   const classes = useStyles();
+  const { accessToken, setAccessToken } = useAuth();
   const {register, errors, handleSubmit} = useForm();
 
   function onSubmit(data) {
-      console.log(data);
+    axios.post("/api/auth/signup", data).then(result => {
+      if (result.status === 201) {
+        setAccessToken(result.data.access_token);
+      } else {
+        console.log("failed");
+      }
+    }).catch(e => {
+      console.log("error");
+    });
+  }
+
+  if (accessToken) {
+    return <Redirect to='/me' />;
   }
 
   return (

@@ -1,0 +1,15 @@
+.signin-form {
+    max-width: 300px;
+}
+
+.signin-form-forgot {
+    float: right;
+}
+
+.ant-col-rtl .signin-form-forgot {
+    float: left;
+}
+
+.signin-form-button {
+    width: 100%;
+}

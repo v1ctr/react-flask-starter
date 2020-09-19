@@ -1,49 +1,19 @@
 import React from 'react';
-import { Redirect, Link as RouterLink } from "react-router-dom";
-import Avatar from '@material-ui/core/Avatar';
-import Button from '@material-ui/core/Button';
-import TextField from '@material-ui/core/TextField';
-import Link from '@material-ui/core/Link';
-import Grid from '@material-ui/core/Grid';
-import LockOutlinedIcon from '@material-ui/icons/LockOutlined';
-import Typography from '@material-ui/core/Typography';
-import { makeStyles } from '@material-ui/core/styles';
-import Container from '@material-ui/core/Container';
+import { Redirect, Link } from "react-router-dom";
+import { Form, Input, Button } from 'antd';
+import { UserOutlined, LockOutlined } from '@ant-design/icons';
 import { useAuth } from "../context/auth";
-import { useForm } from "react-hook-form";
 import API from "../utils/API";
-
-
-const useStyles = makeStyles((theme) => ({
-  paper: {
-    marginTop: theme.spacing(8),
-    display: 'flex',
-    flexDirection: 'column',
-    alignItems: 'center',
-  },
-  avatar: {
-    margin: theme.spacing(1),
-    backgroundColor: theme.palette.secondary.main,
-  },
-  form: {
-    width: '100%', // Fix IE 11 issue.
-    marginTop: theme.spacing(1),
-  },
-  submit: {
-    margin: theme.spacing(3, 0, 2),
-  },
-}));
+import './SignIn.css';
 
 function SignIn(props) {
   const { accessToken, setAccessToken } = useAuth();
-  const classes = useStyles();
-  const {register, errors, handleSubmit} = useForm();
 
   const referer = props.location.state?.referer || '/me';
 
-  async function onSubmit(data) {
+  async function onFinish(values) {
     try {
-      let result = await API.post('/auth/signin', data);
+      let result = await API.post('/auth/signin', values);
       if (result.status === 200) {
         setAccessToken(result.data.access_token);
       } else {
@@ -59,62 +29,45 @@ function SignIn(props) {
   }
 
   return (
-    <Container component="main" maxWidth="xs">
-      <div className={classes.paper}>
-        <Avatar className={classes.avatar}>
-          <LockOutlinedIcon />
-        </Avatar>
-        <Typography component="h1" variant="h5">
-          Sign in
-        </Typography>
-        <form className={classes.form} onSubmit={handleSubmit(onSubmit)} noValidate>
-          <TextField
-            variant="outlined"
-            margin="normal"
-            required
-            fullWidth
-            inputRef={register({ required: true })}
-            id="email"
-            label="Email Address"
-            name="email"
-            autoComplete="email"
-            autoFocus
-            error={!!errors.email}
-            helperText={errors.email && "Email is required"}
-          />
-          <TextField
-            variant="outlined"
-            margin="normal"
-            required
-            fullWidth
-            inputRef={register({ required: true })}
-            name="password"
-            label="Password"
+      <Form
+        name="signin_form"
+        className="signin-form"
+        onFinish={onFinish}
+      >
+        <Form.Item
+          name="email"
+          rules={[
+            {
+              required: true,
+              message: 'Please input your email adress!',
+            }
+          ]}
+        >
+          <Input prefix={<UserOutlined className="site-form-item-icon" />} placeholder="E-Mail" autoComplete="username"/>
+        </Form.Item>
+        <Form.Item
+          name="password"
+          rules={[
+            {
+              required: true,
+              message: 'Please input your password!',
+            },
+          ]}
+        >
+          <Input
+            prefix={<LockOutlined className="site-form-item-icon" />}
             type="password"
-            id="password"
+            placeholder="Password"
             autoComplete="current-password"
-            error={!!errors.password}
-            helperText={errors.password && "Password is required"}
           />
-          <Button
-            type="submit"
-            fullWidth
-            variant="contained"
-            color="primary"
-            className={classes.submit}
-          >
-            Sign In
+        </Form.Item>
+        <Form.Item>
+          <Button type="primary" htmlType="submit" className="signin-form-button">
+            Sign in
           </Button>
-          <Grid container>
-            <Grid item>
-              <Link variant="body2" component={RouterLink} to="/auth/signup">
-                {"Don't have an account? Sign Up"}
-              </Link>
-            </Grid>
-          </Grid>
-        </form>
-      </div>
-    </Container>
+          <Link to="/auth/signup">{"Don't have an account? Sign Up"}</Link>
+        </Form.Item>
+      </Form>
   );
 }
 

@@ -7,7 +7,7 @@ import API from "../utils/API";
 import './SignIn.css';
 
 function SignIn(props) {
-  const { accessToken, setAccessToken } = useAuth();
+  const { accessToken, setAccessToken, refreshToken, setRefreshToken } = useAuth();
 
   const referer = props.location.state?.referer || '/me';
 
@@ -16,6 +16,7 @@ function SignIn(props) {
       let result = await API.post('/auth/signin', values);
       if (result.status === 200) {
         setAccessToken(result.data.access_token);
+        setRefreshToken(result.data.refresh_token);
       } else {
         console.log("failed");
       }

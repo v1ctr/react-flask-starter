@@ -2,7 +2,6 @@ import React from 'react';
 import { Link, Redirect} from 'react-router-dom'
 import { Form, Input, Button } from 'antd';
 import { useAuth } from "../context/auth";
-import API from '../utils/API';
 import './SignUp.css';
 
 const formItemLayout = {
@@ -30,20 +29,7 @@ const tailFormItemLayout = {
 };
 
 function SignUp() {
-  const { accessToken, setAccessToken } = useAuth();
-
-  async function onFinish(values) {
-    try {
-      let result = await API.post('/auth/signup', values);
-      if (result.status === 201) {
-        setAccessToken(result.data.access_token);
-      } else {
-        console.log("failed");
-      }
-    } catch (error) {
-      console.log("error");
-    }
- }
+  const { accessToken, signUp } = useAuth();
 
   if (accessToken) {
     return <Redirect to='/me' />;
@@ -54,7 +40,7 @@ function SignUp() {
       {...formItemLayout}
       name="signup_form"
       className="signup-form"
-      onFinish={onFinish}
+      onFinish={signUp}
       scrollToFirstError
     >
       <Form.Item

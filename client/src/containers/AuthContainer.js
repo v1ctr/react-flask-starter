@@ -1,6 +1,6 @@
 import React from 'react';
 import { Route, useRouteMatch, Redirect, Switch } from "react-router-dom";
-import { Layout, Row, Col, Space } from 'antd';
+import { Layout, Row, Col } from 'antd';
 import SignUp from '../components/SignUp';
 import SignIn from '../components/SignIn';
 //import SignIn from '../components/SignIn_m';

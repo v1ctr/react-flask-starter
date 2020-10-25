@@ -3,27 +3,12 @@ import { Redirect, Link } from "react-router-dom";
 import { Form, Input, Button } from 'antd';
 import { UserOutlined, LockOutlined } from '@ant-design/icons';
 import { useAuth } from "../context/auth";
-import API from "../utils/API";
 import './SignIn.css';
 
 function SignIn(props) {
-  const { accessToken, setAccessToken, refreshToken, setRefreshToken } = useAuth();
+  const { accessToken, signIn } = useAuth();
 
   const referer = props.location.state?.referer || '/me';
-
-  async function onFinish(values) {
-    try {
-      let result = await API.post('/auth/signin', values);
-      if (result.status === 200) {
-        setAccessToken(result.data.access_token);
-        setRefreshToken(result.data.refresh_token);
-      } else {
-        console.log("failed");
-      }
-    } catch (error) {
-      console.log("error");
-    }
- }
 
   if (accessToken) {
     return <Redirect to={referer} />;
@@ -33,7 +18,7 @@ function SignIn(props) {
       <Form
         name="signin_form"
         className="signin-form"
-        onFinish={onFinish}
+        onFinish={signIn}
       >
         <Form.Item
           name="email"

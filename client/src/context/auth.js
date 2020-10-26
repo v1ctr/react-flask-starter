@@ -35,7 +35,7 @@ function AuthProvider(props) {
 
  const handleAccessTokenChange = (token) => {
   localStorage.setItem("accessToken", token);
-  API.defaults.headers.common['Authorization'] = 'Bearer ' + accessToken;
+  API.defaults.headers.common['Authorization'] = 'Bearer ' + token;
   setAccessToken(token);
 }
 

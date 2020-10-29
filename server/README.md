@@ -52,3 +52,36 @@ Get native SQL query that SQLAlchemy generates
 Code coverage tools measure how much of the application is excercised by unit tests. (Grinberg. M, 2018, Flask Web Development, O'REILLY)
 
     $ flask test --coverage
+
+## Deploying
+
+### Docker
+Building the Container Image
+
+```bash
+docker build -t flask-backend:latest .
+```
+
+Running the Container
+
+```bash
+docker run --name flask-backend -d -p 8000:5000 -e SECRET_KEY=secret_key flask-backend:latest
+```
+
+If you get a permission denied error for ```boot.sh``` than change permissions:
+
+```bash
+chmod +x boot.sh
+```
+
+Stopping the Container
+
+```bash
+docker stop flask-backend
+```
+
+Deleting the Container
+
+```bash
+docker rm flask-backend
+```

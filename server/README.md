@@ -65,7 +65,7 @@ docker build -t flask-backend:latest .
 Running the Container
 
 ```bash
-docker run --name flask-backend -d -p 8000:5000 -e SECRET_KEY=secret_key flask-backend:latest
+docker run --rm --name flask-backend -d -p 8000:5000 -e SECRET_KEY=secret_key flask-backend:latest
 ```
 
 If you get a permission denied error for ```boot.sh``` than change permissions:

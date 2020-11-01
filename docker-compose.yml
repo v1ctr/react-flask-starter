@@ -1,0 +1,26 @@
+version: '3'
+
+services:
+    
+  frontend:
+    build: ./client
+    image: "react-frontend:latest"
+    networks:
+      - app-network
+
+  backend:
+    build: ./server
+    image: "flask-backend:latest"
+    networks:
+      - app-network
+
+  revproxy:
+    build: ./proxy
+    image: "reverse-proxy:latest"
+    networks:
+      - app-network
+    ports:
+      - "8000:80"
+
+networks:
+  app-network:

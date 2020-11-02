@@ -1,3 +1,4 @@
+import datetime
 from . import auth_blueprint
 from app import db
 from app.models import User
@@ -17,7 +18,7 @@ def signin():
     user = User.query.filter_by(email=data['email']).first()
     if user and user.verify_password(data['password']):
         response_data = {
-            'access_token': create_access_token(identity=user),
+            'access_token': create_access_token(identity=user, expires_delta=datetime.timedelta(minutes=15)),
             'refresh_token': create_refresh_token(identity=user)
         }
         return jsonify(response_data), 200
@@ -30,7 +31,7 @@ def signin():
 def refresh():
     current_user_id = get_jwt_identity()
     response_data = {
-        'access_token': create_access_token(identity=current_user_id, fresh=False)
+        'access_token': create_access_token(identity=current_user_id, fresh=False, expires_delta=datetime.timedelta(minutes=15))
     }
     return jsonify(response_data), 200
 
@@ -47,7 +48,7 @@ def signup():
     db.session.add(new_user)
     db.session.commit()
     response_data = {
-        'access_token': create_access_token(identity=new_user),
+        'access_token': create_access_token(identity=new_user, expires_delta=datetime.timedelta(minutes=15)),
         'refresh_token': create_refresh_token(identity=new_user)
     }
     return jsonify(response_data), 201

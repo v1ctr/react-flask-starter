@@ -1,5 +1,6 @@
 // Inspired by https://kentcdodds.com/blog/authentication-in-react-applications
 import React, { useState } from 'react'
+import axios from "axios";
 import API from "../utils/API";
 
 const AuthContext = React.createContext()
@@ -7,18 +8,42 @@ function AuthProvider(props) {
   // code for pre-loading the user's information if we have their token in
   // localStorage goes here
   const [accessToken, setAccessToken] = useState(localStorage.getItem("accessToken"));
-  const [refreshToken, setRefreshToken] = useState(localStorage.getItem("refreshToken"));
+
   //const [user, setUser] = useState({});
 
-  API.defaults.headers.common['Authorization'] = 'Bearer ' + accessToken;
+  // Add accessToken to every request
+  API.interceptors.request.use(function (config) {
+    // Do something before request is sent
+    config.headers['Authorization'] = 'Bearer ' + localStorage.getItem('accessToken');
+    return config;
+  }, function (error) {
+    // Do something with request error
+    return Promise.reject(error);
+  });
+
+  // Automatically refresh if accessToken has expired
   API.interceptors.response.use((response) => {
     return response
   }, async function (error) {
     const originalRequest = error.config;
-    if (error.response.status === 401 && !originalRequest._retry) {
+    if (error.response.status === 401 && originalRequest && !originalRequest._retry) {
       originalRequest._retry = true;
-      refresh();
-      return API(originalRequest);
+      try {
+        let result = await axios.post('/api/auth/refresh', {
+          //...data
+        }, {
+          headers: {
+            'Authorization': `Bearer ${localStorage.getItem("refreshToken")}`
+          }
+        });
+        if (result.status === 200) {
+          handleAccessTokenChange(result.data.access_token);
+          originalRequest.headers['Authorization'] = 'Bearer ' + result.data.access_token;
+          return API(originalRequest);
+        }
+      } catch (err) {
+        return Promise.reject(error);
+      }
     }
     return Promise.reject(error);
   });
@@ -35,13 +60,12 @@ function AuthProvider(props) {
 
  const handleAccessTokenChange = (token) => {
   localStorage.setItem("accessToken", token);
-  API.defaults.headers.common['Authorization'] = 'Bearer ' + token;
   setAccessToken(token);
+  API.defaults.headers.common['Authorization'] = 'Bearer ' + accessToken;
 }
 
 const handleRefreshTokenChange = (token) => {
   localStorage.setItem("refreshToken", token);
-  setRefreshToken(token);
 }
 
  // make a login request
@@ -74,21 +98,6 @@ const handleRefreshTokenChange = (token) => {
     }
   }
 
-  async function refresh() {
-    try {
-      let result = await API.post('/auth/refresh', {
-        //...data
-      }, {
-        headers: {
-          'Authorization': `Bearer ${refreshToken}`
-        }
-      });
-      handleAccessTokenChange(result.data.access_token);
-    } catch (error) {
-      console.log("error");
-    }
-  }
-
   // clear the token in localStorage and the user data
   const signOut = () => {
     handleAccessTokenChange('');
@@ -99,7 +108,7 @@ const handleRefreshTokenChange = (token) => {
   // because this is the top-most component rendered in our app and it will very
   // rarely re-render/cause a performance problem.
   return (
-    <AuthContext.Provider value={{accessToken, refreshToken, signIn, signOut, signUp, refresh}} {...props} />
+    <AuthContext.Provider value={{accessToken, signIn, signOut, signUp}} {...props} />
   )
 }
 const useAuth = () => React.useContext(AuthContext)

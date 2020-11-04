@@ -1,0 +1,10 @@
+Dear {{ user.first_name }},
+
+Welcome to React-Flask-Starter.
+
+To confirm your account please click on the following link:
+{{ url_for('auth.signup', token=token, _external=True) }}
+
+Sincerly,
+
+The React-Flask-Starter Team

@@ -2,7 +2,7 @@ import datetime
 from . import auth_blueprint
 from app import db
 from app.models import User
-
+from app.email import send_email
 from flask import request, jsonify
 from werkzeug.exceptions import BadRequest, Unauthorized
 from flask_jwt_extended import (jwt_required, jwt_refresh_token_required, get_jwt_identity, get_current_user,
@@ -47,6 +47,9 @@ def signup():
     new_user = User(data['email'], data['password'])
     db.session.add(new_user)
     db.session.commit()
+    token = new_user.generate_confirmation_token()
+    send_email(new_user.email, 'Confirm Your Account',
+        'email/confirm', user=new_user, token=token)
     response_data = {
         'access_token': create_access_token(identity=new_user, expires_delta=datetime.timedelta(minutes=15)),
         'refresh_token': create_refresh_token(identity=new_user)

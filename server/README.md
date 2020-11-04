@@ -44,6 +44,22 @@ Get native SQL query that SQLAlchemy generates
     
     $ str(User.query.filter_by(email="test@gmail.com"))
 
+## Sending Emails
+
+### Start Flask Shell 
+    export MAIL_USERNAME=<Gmail username>
+    export MAIL_PASSWORD=<Gmail password>
+    export MAIL_DEFAULT_SENDER=<Gmail mail adress>
+    flask shell
+    
+To display the name as the sender you can set ```MAIL_DEFAULT_USER='User <user@example.com>'```
+
+### Sending Email
+    from app.email import send_email
+    send_email('you@example.com', 'Subject', 'email')
+
+If you're using Gmail, make sure you allow less secure apps: [https://myaccount.google.com/lesssecureapps](https://myaccount.google.com/lesssecureapps)
+
 ## Testing
 ### Unit Tests
     $ flask test
@@ -85,3 +101,7 @@ Deleting the Container
 ```bash
 docker rm flask-backend
 ```
+
+## References
+* Grinberg. M, 2018, Flask Web Development, O'REILLY
+* [https://github.com/sendgrid/email-templates](https://github.com/sendgrid/email-templates)

@@ -1,0 +1,6 @@
+Dear {{user.first_name}},
+
+this is a test email.
+
+Best,
+Your React-Flask-Starter Team.

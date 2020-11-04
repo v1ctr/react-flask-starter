@@ -33,3 +33,16 @@ class UserModelTestCase(unittest.TestCase):
         u = User('email', 'password')
         u2 = User('email', 'password')
         self.assertTrue(u.password_hash != u2.password_hash)
+
+    def test_confirmation(self):
+        u = User('email', 'password')
+        self.assertFalse(u.confirmed)
+        self.assertFalse(u.confirmed_at)
+        token = u.generate_confirmation_token()
+        self.assertFalse(u.confirm(''))
+        self.assertFalse(u.confirm('wrong_token'))
+        self.assertTrue(u.confirm(token))
+        self.assertTrue(u.confirmed)
+        self.assertTrue(u.confirmed_at)
+        u2 = User('email', 'password')
+        self.assertFalse(u2.confirm(token))

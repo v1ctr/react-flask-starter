@@ -55,6 +55,7 @@ class User(db.Model):
         self.confirmed = True
         self.confirmed_at = datetime.datetime.utcnow()
         db.session.add(self)
+        db.session.commit()
         return True
 
     def get_id(self):

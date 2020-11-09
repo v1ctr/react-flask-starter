@@ -1,5 +1,6 @@
 import unittest
 from app import create_app, db
+from app.models import User
 
 
 class AuthRouteTestCase(unittest.TestCase):
@@ -95,3 +96,33 @@ class AuthRouteTestCase(unittest.TestCase):
                                    })
         self.assertEqual(response.status_code, 200)
         self.assertTrue(response.get_json().get('access_token'))
+
+    def test_confirm(self):
+        user = User("test@gmail.com", "12345")
+        db.session.add(user)
+        db.session.commit()
+        response = self.client.post('/auth/signin', json={
+            "email": "test@gmail.com",
+            "password": "12345"
+        })
+        access_token = response.get_json().get('access_token')
+        self.assertTrue(user)
+        self.assertFalse(user.confirmed)
+        response = self.client.post('/auth/confirm/' + 'wrongToken',
+                                   headers={
+                                       'Authorization': 'Bearer ' + access_token,
+                                       'Accept': 'application/json',
+                                       'Content-Type': 'application/json'
+                                   })
+        self.assertEqual(response.status_code, 422)
+        
+        confirmation_token = user.generate_confirmation_token()
+        response = self.client.post('/auth/confirm/' + confirmation_token,
+                                   headers={
+                                       'Authorization': 'Bearer ' + access_token,
+                                       'Accept': 'application/json',
+                                       'Content-Type': 'application/json'
+                                   })
+        self.assertEqual(response.status_code, 200)
+        self.assertTrue(response.get_json().get('confirmed'))
+

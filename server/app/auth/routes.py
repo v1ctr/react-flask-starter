@@ -4,7 +4,7 @@ from . import auth_blueprint
 from app import db
 from app.models import User
 from app.email import send_email
-from flask import request, jsonify
+from flask import request, jsonify, current_app
 from werkzeug.exceptions import BadRequest, Unauthorized, UnprocessableEntity
 from flask_jwt_extended import (jwt_required, jwt_refresh_token_required, get_jwt_identity, get_current_user,
                                 create_access_token, create_refresh_token)
@@ -49,8 +49,9 @@ def signup():
     db.session.add(new_user)
     db.session.commit()
     token = new_user.generate_confirmation_token()
+    confirmation_url = f'http://{current_app.config["CLIENT_BASE_URL"]}/auth/confirm/{token}'
     send_email(new_user.email, 'Confirm Your Account',
-        'email/confirm', user=new_user, token=token)
+        'email/confirm', user=new_user, url=confirmation_url)
     response_data = {
         'access_token': create_access_token(identity=new_user, expires_delta=datetime.timedelta(minutes=15)),
         'refresh_token': create_refresh_token(identity=new_user)
@@ -64,7 +65,22 @@ def confirm(token):
     current_user_id = get_jwt_identity()
     user = User.query.filter_by(id=uuid.UUID(current_user_id)).first_or_404()
     if user.confirmed:
-        return jsonify({ 'confirmed': True }), 200
+        raise BadRequest('Account already confirmed.')
     if user.confirm(token):
         return jsonify({ 'confirmed': user.confirmed }), 200
     raise UnprocessableEntity('Bad confirmation token')
+
+
+@auth_blueprint.route('/resend', methods=['POST'])
+@jwt_required
+def resend_confirmation():
+    current_user_id = get_jwt_identity()
+    user = User.query.filter_by(id=uuid.UUID(current_user_id)).first_or_404()
+    if user.confirmed:
+        raise BadRequest('Account already confirmed.')
+
+    token = user.generate_confirmation_token()
+    confirmation_url = f'http://{current_app.config["CLIENT_BASE_URL"]}/auth/confirm/{token}'
+    send_email(user.email, 'Confirm Your Account', 
+        'email/confirm', user=user, url=confirmation_url)
+    return {}, 200

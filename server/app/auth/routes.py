@@ -45,7 +45,7 @@ def signup():
     if User.query.filter_by(email=data['email']).first():
         raise BadRequest('please use a different email address')
 
-    new_user = User(data['email'], data['password'])
+    new_user = User(data['email'].lower(), data['password'])
     db.session.add(new_user)
     db.session.commit()
     token = new_user.generate_confirmation_token()
@@ -81,6 +81,33 @@ def resend_confirmation():
 
     token = user.generate_confirmation_token()
     confirmation_url = f'http://{current_app.config["CLIENT_BASE_URL"]}/auth/confirm/{token}'
-    send_email(user.email, 'Confirm Your Account', 
+    send_email(user.email, 'Confirm Your Account',
         'email/confirm', user=user, url=confirmation_url)
     return {}, 200
+
+
+@auth_blueprint.route('/reset', methods=['POST'])
+def request_password_reset():
+    data = request.get_json() or {}
+    if 'email' not in data :
+        raise BadRequest('must include email field')
+    
+    user = User.query.filter_by(email=data['email'].lower()).first_or_404()
+    if user:
+        token = user.generate_reset_token()
+        reset_url = f'http://{current_app.config["CLIENT_BASE_URL"]}/auth/reset/{token}'
+        send_email(user.email, 'Reset Your Password',
+            'email/reset', user=user, url=reset_url) 
+    return {}, 200
+
+
+@auth_blueprint.route('/reset/<token>', methods=['POST'])
+def reset_password(token):
+    data = request.get_json() or {}
+    if 'password' not in data :
+        raise BadRequest('must include password field')
+    
+    if User.reset_password(token, data['password']):
+        return jsonify({ 'reset': True }), 200
+    
+    raise UnprocessableEntity('Bad reset token')

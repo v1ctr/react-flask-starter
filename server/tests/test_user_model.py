@@ -46,3 +46,13 @@ class UserModelTestCase(unittest.TestCase):
         self.assertTrue(u.confirmed_at)
         u2 = User('email', 'password')
         self.assertFalse(u2.confirm(token))
+
+    def test_reset_password(self):
+        u = User('email', 'password')
+        db.session.add(u)
+        db.session.commit()
+        token = u.generate_reset_token()
+        self.assertFalse(User.reset_password('', 'new_password'))
+        self.assertFalse(User.reset_password('wrong_token', 'new_password'))
+        self.assertTrue(User.reset_password(token, 'new_password'))
+        self.assertTrue(u.verify_password('new_password'))

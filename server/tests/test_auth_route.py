@@ -97,6 +97,7 @@ class AuthRouteTestCase(unittest.TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertTrue(response.get_json().get('access_token'))
 
+    
     def test_confirm(self):
         user = User("test@gmail.com", "12345")
         db.session.add(user)
@@ -126,3 +127,48 @@ class AuthRouteTestCase(unittest.TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertTrue(response.get_json().get('confirmed'))
 
+
+    def test_reset(self):
+        user = User("test@gmail.com", "12345")
+        db.session.add(user)
+        db.session.commit()
+        response = self.client.post('/auth/signin', json={
+            "email": "test@gmail.com",
+            "password": "12345"
+        })
+        access_token = response.get_json().get('access_token')
+        response = self.client.post('/auth/reset/' + 'wrongToken',
+                                   headers={
+                                       'Authorization': 'Bearer ' + access_token,
+                                       'Accept': 'application/json',
+                                       'Content-Type': 'application/json'
+                                   },
+                                   json={
+                                        'password': '54321'
+        })
+        self.assertEqual(response.status_code, 422)
+        
+        reset_token = user.generate_reset_token()
+        response = self.client.post('/auth/reset/' + reset_token,
+                                   headers={
+                                       'Authorization': 'Bearer ' + access_token,
+                                       'Accept': 'application/json',
+                                       'Content-Type': 'application/json'
+                                   },
+                                   json={
+                                        'password': '54321'
+        })
+        self.assertEqual(response.status_code, 200)
+        self.assertTrue(response.get_json().get('reset'))
+
+        response = self.client.post('/auth/signin', json={
+            "email": "test@gmail.com",
+            "password": "12345"
+        })
+        self.assertEqual(response.status_code, 401)
+
+        response = self.client.post('/auth/signin', json={
+            "email": "test@gmail.com",
+            "password": "54321"
+        })
+        self.assertEqual(response.status_code, 200)

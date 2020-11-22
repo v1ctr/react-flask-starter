@@ -1,9 +1,11 @@
 import React from 'react';
 import { Redirect, Link } from "react-router-dom";
-import { Form, Input, Button } from 'antd';
+import { Form, Input, Button, Typography } from 'antd';
 import { UserOutlined, LockOutlined } from '@ant-design/icons';
 import { useAuth } from "../context/auth";
 import './SignIn.css';
+
+const { Title } = Typography;
 
 function SignIn(props) {
   const { accessToken, signIn } = useAuth();
@@ -15,6 +17,10 @@ function SignIn(props) {
   }
 
   return (
+    <React.Fragment>
+      <Title style={{
+        textAlign: "center"
+      }} level={2} >Sign In</Title>
       <Form
         name="signin_form"
         className="signin-form"
@@ -29,7 +35,7 @@ function SignIn(props) {
             }
           ]}
         >
-          <Input prefix={<UserOutlined className="site-form-item-icon" />} placeholder="E-Mail" autoComplete="username"/>
+          <Input prefix={<UserOutlined className="site-form-item-icon" />} placeholder="E-Mail" autoComplete="username" />
         </Form.Item>
         <Form.Item
           name="password"
@@ -48,12 +54,16 @@ function SignIn(props) {
           />
         </Form.Item>
         <Form.Item>
+          <Link className="signin-form-forgot" to="/auth/reset">{"Forgot Password"}</Link>
+        </Form.Item>
+        <Form.Item>
           <Button type="primary" htmlType="submit" className="signin-form-button">
             Sign in
           </Button>
           <Link to="/auth/signup">{"Don't have an account? Sign Up"}</Link>
         </Form.Item>
       </Form>
+    </React.Fragment>
   );
 }
 

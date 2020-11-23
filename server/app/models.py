@@ -1,7 +1,9 @@
 import datetime
 import uuid
 from flask import current_app
+from flask_jwt_extended import decode_token
 from sqlalchemy_utils import UUIDType
+from sqlalchemy.orm.exc import NoResultFound
 from werkzeug.security import generate_password_hash, check_password_hash
 from itsdangerous import TimedJSONWebSignatureSerializer as Serializer
 from . import db
@@ -80,3 +82,35 @@ class User(db.Model):
     def get_id(self):
         return str(self.id)
 
+
+class TokenBlacklist(db.Model):
+    __tablename__ = 'blacklist'
+
+    id = db.Column(UUIDType(binary=False), primary_key=True)
+    jti = db.Column(db.String(36), nullable=False)
+    user_id = db.Column(UUIDType(binary=False), db.ForeignKey('users.id'), nullable=False)
+    user = db.relationship('User', foreign_keys=[user_id])
+    revoked = db.Column(db.Boolean, nullable=False, default=False)
+    created_at = db.Column(db.DateTime)
+    expires_at = db.Column(db.DateTime, nullable=False)
+
+    def __init__(self, encoded_token, identity_claim):
+        self.id = uuid.uuid4()
+        decoded_token = decode_token(encoded_token)
+        self.jti = decoded_token['jti']
+        self.user_id = uuid.UUID(decoded_token[identity_claim])
+        self.revoked = False
+        self.created_at = datetime.datetime.utcnow()
+        self.expires_at = datetime.datetime.fromtimestamp(decoded_token['exp'])
+    
+    def __repr__(self):
+        return f'<Token {self.jti}>'
+
+    @staticmethod
+    def is_token_revoked(decoded_token):
+        jti = decoded_token['jti']
+        try:
+            token = TokenBlacklist.query.filter_by(jti=jti).one()
+            return token.revoked
+        except NoResultFound:
+            return True

@@ -15,7 +15,7 @@ import sys
 import click
 from flask_migrate import Migrate, upgrade
 from app import create_app, db
-from app.models import User
+from app.models import User, TokenBlacklist
 
 # Call the Application Factory function to construct a Flask application instance
 app = create_app(os.getenv('FLASK_CONFIG') or 'default')
@@ -23,7 +23,7 @@ migrate = Migrate(app, db)
 
 @app.shell_context_processor
 def make_shell_context():
-    return dict(db=db, User=User)
+    return dict(db=db, User=User, TokenBlacklist=TokenBlacklist)
 
 
 @app.cli.command()

@@ -34,7 +34,7 @@ def initialize_extensions(app):
     mail.init_app(app)
 
     # SQLAlchemy models
-    from .models import User
+    from .models import User, TokenBlacklist
 
     # Flask-JWT-Extended configuration
     @jwt.user_identity_loader
@@ -45,6 +45,10 @@ def initialize_extensions(app):
         if isinstance(user, str):
             user_id = user
         return user_id
+    
+    @jwt.token_in_blacklist_loader
+    def check_if_token_revoked(decoded_token):
+        return TokenBlacklist.is_token_revoked(decoded_token)
 
     @jwt.expired_token_loader
     def expired_token_loader(token):

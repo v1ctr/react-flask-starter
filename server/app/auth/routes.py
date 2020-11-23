@@ -2,7 +2,7 @@ import datetime
 import uuid
 from . import auth_blueprint
 from app import db
-from app.models import User
+from app.models import User, TokenBlacklist
 from app.email import send_email
 from flask import request, jsonify, current_app
 from werkzeug.exceptions import BadRequest, Unauthorized, UnprocessableEntity
@@ -18,9 +18,14 @@ def signin():
 
     user = User.query.filter_by(email=data['email']).first()
     if user and user.verify_password(data['password']):
+        refresh_token = create_refresh_token(identity=user)
+        # Add Refresh Token to Blacklist with status not revoked
+        blacklisted_token = TokenBlacklist(refresh_token, current_app.config['JWT_IDENTITY_CLAIM'])
+        db.session.add(blacklisted_token)
+        db.session.commit()
         response_data = {
             'access_token': create_access_token(identity=user, expires_delta=datetime.timedelta(minutes=15)),
-            'refresh_token': create_refresh_token(identity=user)
+            'refresh_token': refresh_token
         }
         return jsonify(response_data), 200
 
@@ -52,9 +57,15 @@ def signup():
     confirmation_url = f'http://{current_app.config["CLIENT_BASE_URL"]}/auth/confirm/{token}'
     send_email(new_user.email, 'Confirm Your Account',
         'email/confirm', user=new_user, url=confirmation_url)
+    
+    refresh_token = create_refresh_token(identity=new_user)
+    # Add Refresh Token to Blacklist with status not revoked
+    blacklisted_token = TokenBlacklist(refresh_token, current_app.config['JWT_IDENTITY_CLAIM'])
+    db.session.add(blacklisted_token)
+    db.session.commit()
     response_data = {
         'access_token': create_access_token(identity=new_user, expires_delta=datetime.timedelta(minutes=15)),
-        'refresh_token': create_refresh_token(identity=new_user)
+        'refresh_token': refresh_token
     }
     return jsonify(response_data), 201
 

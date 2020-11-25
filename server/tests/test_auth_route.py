@@ -1,4 +1,5 @@
 import unittest
+from werkzeug.http import parse_cookie
 from app import create_app, db
 from app.models import User
 
@@ -16,6 +17,16 @@ class AuthRouteTestCase(unittest.TestCase):
         db.drop_all()
         self.app_context.pop()
 
+    def get_cookie(self, response, name):
+        # Checks for existence of a cookie
+        cookies = response.headers.getlist('Set-Cookie')
+        for cookie in cookies:
+            c_value = parse_cookie(cookie).get(name)
+            if c_value:
+                return c_value
+        # Cookie not found
+        return None
+
     def test_register_and_signin(self):
         # register a new account
         response = self.client.post('/auth/signup', json={
@@ -24,7 +35,8 @@ class AuthRouteTestCase(unittest.TestCase):
         })
         self.assertEqual(response.status_code, 201)
         self.assertTrue(response.get_json().get('access_token'))
-        self.assertTrue(response.get_json().get('refresh_token'))
+        self.assertTrue(self.get_cookie(response, 'refresh_token_cookie'))
+        #self.assertTrue(response.get_json().get('refresh_token'))
 
         # log in with the new account
         response = self.client.post('/auth/signin', json={
@@ -33,7 +45,8 @@ class AuthRouteTestCase(unittest.TestCase):
         })
         self.assertEqual(response.status_code, 200)
         self.assertTrue(response.get_json().get('access_token'))
-        self.assertTrue(response.get_json().get('refresh_token'))
+        #self.assertTrue(response.get_json().get('refresh_token'))
+        self.assertTrue(self.get_cookie(response, 'refresh_token_cookie'))
 
         # log in with the wrong credentials
         response = self.client.post('/auth/signin', json={
@@ -45,7 +58,8 @@ class AuthRouteTestCase(unittest.TestCase):
         self.assertTrue(response.get_json().get('description'))
         self.assertTrue(response.get_json().get('name'))
         self.assertFalse(response.get_json().get('access_token'))
-        self.assertFalse(response.get_json().get('refresh_token'))
+        #self.assertFalse(response.get_json().get('refresh_token'))
+        self.assertFalse(self.get_cookie(response, 'refresh_token_cookie'))
 
         # log in with missing credentials
         response = self.client.post('/auth/signin', json={
@@ -56,7 +70,8 @@ class AuthRouteTestCase(unittest.TestCase):
         self.assertTrue(response.get_json().get('description'))
         self.assertTrue(response.get_json().get('name'))
         self.assertFalse(response.get_json().get('access_token'))
-        self.assertFalse(response.get_json().get('refresh_token'))
+        #self.assertFalse(response.get_json().get('refresh_token'))
+        self.assertFalse(self.get_cookie(response, 'refresh_token_cookie'))
 
     def test_refresh(self):
         response = self.client.post('/auth/signup', json={
@@ -65,7 +80,8 @@ class AuthRouteTestCase(unittest.TestCase):
         })
         self.assertEqual(response.status_code, 201)
         access_token = response.get_json().get('access_token')
-        refresh_token = response.get_json().get('refresh_token')
+        #refresh_token = response.get_json().get('refresh_token')
+        refresh_token = self.get_cookie(response, 'refresh_token_cookie')
         self.assertTrue(access_token)
         self.assertTrue(refresh_token)
 

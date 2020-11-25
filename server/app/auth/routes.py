@@ -7,7 +7,7 @@ from app.email import send_email
 from flask import request, jsonify, current_app
 from werkzeug.exceptions import BadRequest, Unauthorized, UnprocessableEntity
 from flask_jwt_extended import (jwt_required, jwt_refresh_token_required, get_jwt_identity, get_current_user,
-                                create_access_token, create_refresh_token)
+                                create_access_token, create_refresh_token, set_refresh_cookies)
 
 
 @auth_blueprint.route('/signin', methods=['POST'])
@@ -24,10 +24,11 @@ def signin():
         db.session.add(blacklisted_token)
         db.session.commit()
         response_data = {
-            'access_token': create_access_token(identity=user, expires_delta=datetime.timedelta(minutes=15)),
-            'refresh_token': refresh_token
+            'access_token': create_access_token(identity=user, expires_delta=datetime.timedelta(minutes=15))
         }
-        return jsonify(response_data), 200
+        response = jsonify(response_data)
+        set_refresh_cookies(response, refresh_token)
+        return response, 200
 
     raise Unauthorized('Bad username or password')
 
@@ -64,10 +65,11 @@ def signup():
     db.session.add(blacklisted_token)
     db.session.commit()
     response_data = {
-        'access_token': create_access_token(identity=new_user, expires_delta=datetime.timedelta(minutes=15)),
-        'refresh_token': refresh_token
+        'access_token': create_access_token(identity=new_user, expires_delta=datetime.timedelta(minutes=15))
     }
-    return jsonify(response_data), 201
+    response = jsonify(response_data)
+    set_refresh_cookies(response, refresh_token)
+    return response, 201
 
 
 @auth_blueprint.route('/confirm/<token>', methods=['POST'])

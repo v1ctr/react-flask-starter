@@ -105,3 +105,4 @@ docker rm flask-backend
 ## References
 * Grinberg. M, 2018, Flask Web Development, O'REILLY
 * [https://github.com/sendgrid/email-templates](https://github.com/sendgrid/email-templates)
+* [The Ultimate Guide to handling JWTs on frontend clients (GraphQL)](https://hasura.io/blog/best-practices-of-using-jwt-with-graphql/#jwt_security)

@@ -21,6 +21,14 @@ function AuthProvider(props) {
   }
   */
 
+  const syncSignOut = (event) => {
+    if (event.key === 'signout') {
+      handleAccessTokenChange('');
+    }
+  }
+
+  window.addEventListener('storage', syncSignOut);
+
   // silent refresh
   if (!accessToken) {
     refreshAccessToken();
@@ -83,9 +91,19 @@ function AuthProvider(props) {
       }
     }
 
-  // clear the token and the user data
-  const signOut = () => {
+  // clear the token and and force signout
+  async function signOut() {
+    let csrfRefreshToken = Cookies.get('csrf_refresh_token');
+    if (csrfRefreshToken) {
+      await axios.delete('/api/auth/refresh', {
+        headers: {
+          'X-CSRF-TOKEN': csrfRefreshToken
+        }
+      });
+    }
     handleAccessTokenChange('');
+    // Sign out from all windows and tabs
+    window.localStorage.setItem('signout', Date.now())
   }
   
   // note, I'm not bothering to optimize this `value` with React.useMemo here

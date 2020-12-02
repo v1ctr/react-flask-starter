@@ -4,10 +4,10 @@ from . import auth_blueprint
 from app import db
 from app.models import User, TokenBlacklist
 from app.email import send_email
-from flask import request, jsonify, current_app
+from flask import request, jsonify, current_app, make_response
 from werkzeug.exceptions import BadRequest, Unauthorized, UnprocessableEntity
 from flask_jwt_extended import (jwt_required, jwt_refresh_token_required, get_jwt_identity, get_current_user,
-                                create_access_token, create_refresh_token, set_refresh_cookies)
+                                create_access_token, create_refresh_token, set_refresh_cookies, unset_jwt_cookies, get_raw_jwt)
 
 
 @auth_blueprint.route('/signin', methods=['POST'])
@@ -41,6 +41,22 @@ def refresh():
         'access_token': create_access_token(identity=current_user_id, fresh=False, expires_delta=datetime.timedelta(minutes=15))
     }
     return jsonify(response_data), 200
+
+
+@auth_blueprint.route('/refresh', methods=['DELETE'])
+@jwt_refresh_token_required
+def signout():
+    jti = get_raw_jwt()['jti']
+
+    token = TokenBlacklist.query.filter_by(jti=jti).one()
+    if token and not token.revoked:
+        token.revoked = True
+        db.session.add(token)
+        db.session.commit()
+
+    response = make_response({}, 200)
+    unset_jwt_cookies(response)
+    return response
 
 
 @auth_blueprint.route('/signup', methods=['POST'])

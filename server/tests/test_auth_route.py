@@ -36,7 +36,6 @@ class AuthRouteTestCase(unittest.TestCase):
         self.assertEqual(response.status_code, 201)
         self.assertTrue(response.get_json().get('access_token'))
         self.assertTrue(self.get_cookie(response, 'refresh_token_cookie'))
-        #self.assertTrue(response.get_json().get('refresh_token'))
 
         # log in with the new account
         response = self.client.post('/auth/signin', json={
@@ -45,7 +44,6 @@ class AuthRouteTestCase(unittest.TestCase):
         })
         self.assertEqual(response.status_code, 200)
         self.assertTrue(response.get_json().get('access_token'))
-        #self.assertTrue(response.get_json().get('refresh_token'))
         self.assertTrue(self.get_cookie(response, 'refresh_token_cookie'))
 
         # log in with the wrong credentials
@@ -58,7 +56,6 @@ class AuthRouteTestCase(unittest.TestCase):
         self.assertTrue(response.get_json().get('description'))
         self.assertTrue(response.get_json().get('name'))
         self.assertFalse(response.get_json().get('access_token'))
-        #self.assertFalse(response.get_json().get('refresh_token'))
         self.assertFalse(self.get_cookie(response, 'refresh_token_cookie'))
 
         # log in with missing credentials
@@ -70,7 +67,6 @@ class AuthRouteTestCase(unittest.TestCase):
         self.assertTrue(response.get_json().get('description'))
         self.assertTrue(response.get_json().get('name'))
         self.assertFalse(response.get_json().get('access_token'))
-        #self.assertFalse(response.get_json().get('refresh_token'))
         self.assertFalse(self.get_cookie(response, 'refresh_token_cookie'))
 
     def test_refresh(self):
@@ -80,7 +76,6 @@ class AuthRouteTestCase(unittest.TestCase):
         })
         self.assertEqual(response.status_code, 201)
         access_token = response.get_json().get('access_token')
-        #refresh_token = response.get_json().get('refresh_token')
         refresh_token = self.get_cookie(response, 'refresh_token_cookie')
         self.assertTrue(access_token)
         self.assertTrue(refresh_token)
@@ -103,7 +98,7 @@ class AuthRouteTestCase(unittest.TestCase):
         self.assertEqual(response.status_code, 422)
         self.assertEqual(response.get_json().get('description'), "Only refresh tokens are allowed")
 
-        # Refresh with refresh_token
+        # Refresh with refresh_token in Header
         response = self.client.post('/auth/refresh',
                                    headers={
                                        'Authorization': 'Bearer ' + refresh_token,
@@ -112,6 +107,29 @@ class AuthRouteTestCase(unittest.TestCase):
                                    })
         self.assertEqual(response.status_code, 200)
         self.assertTrue(response.get_json().get('access_token'))
+
+
+    def test_signout(self):
+        response = self.client.post('/auth/signup', json={
+            "email": "test@gmail.com",
+            "password": "12345"
+        })
+        self.assertEqual(response.status_code, 201)
+        access_token = response.get_json().get('access_token')
+        refresh_token = self.get_cookie(response, 'refresh_token_cookie')
+        self.assertTrue(access_token)
+        self.assertTrue(refresh_token)
+
+        # Refresh Token Cookie should be deleted on signout
+        response = self.client.delete('/auth/refresh',
+                                   headers={
+                                       'Authorization': 'Bearer ' + refresh_token,
+                                       'Accept': 'application/json',
+                                       'Content-Type': 'application/json'
+                                   })
+        self.assertEqual(response.status_code, 200)
+        refresh_token = self.get_cookie(response, 'refresh_token_cookie')
+        self.assertFalse(refresh_token)
 
     
     def test_confirm(self):

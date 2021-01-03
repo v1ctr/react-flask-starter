@@ -47,14 +47,12 @@ function App() {
   */
 
   return (
-    <div id="container">
-      <Router>
+    <Router>
         <Switch>
           <Route path="/(auth)" component={AuthContainer} />
           <PrivateRoute component={BaseContainer} />
         </Switch>
       </Router>
-    </div>
   );
 }
 

@@ -6,7 +6,6 @@ import ResetPassword from '../components/ResetPassword';
 import NewPassword from '../components/NewPassword';
 import Confirm from '../components/Confirm';
 import PrivateRoute from '../PrivateRoute';
-import './AuthContainer.css';
 
 
 function AuthContainer() {

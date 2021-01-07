@@ -1,6 +1,26 @@
 # react-flask-starter
 Quickstart for building a React-Flask Web-Application
 
+## Mirror React-Flask-Starter Repository
+1. Create a bare clone of the repository.
+    
+    ```
+    git clone --bare https://github.com/v1ctr/react-flask-starter.git
+    ```
+2. Mirror-push to the new repository.
+
+    ```
+    cd react-flask-starter.git
+    git push --mirror https://github.com/exampleuser/new-repository.git
+    ```
+
+3. Remove the temporary local repository you created earlier.
+
+    ```
+    cd ..
+    rm -rf react-flask-starter.git
+    ```
+
 ## Run Client in Development Mode
     cd client
     npm start

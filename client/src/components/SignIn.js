@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Redirect, Link } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { useAuth } from "../context/auth";
@@ -6,8 +6,18 @@ import { useAuth } from "../context/auth";
 function SignIn(props) {
   const { accessToken, signIn } = useAuth();
   const { register, handleSubmit, errors } = useForm();
+  const [ error, setError ] = useState(false);
 
-  const onSubmit = data => signIn(data);
+  const onSubmit = (data) => {
+    setError(false);
+    signIn(data).catch( (error) => {
+      if (error.response && error.response.data) {
+        setError(error.response.data.description);
+      } else {
+        setError("Ooops. Something went wrong.");
+      }
+    });
+  }
 
   const referer = props.location.state?.referer || '/me';
 
@@ -51,6 +61,10 @@ function SignIn(props) {
                   ref={register({ required: true })}
                   className={`mt-1 focus:ring-indigo-500 focus:border-indigo-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md${errors.password ? ' border-red-400' : ''}`} />
                   {errors.password && <p className="mt-2 text-sm text-red-400">Please input your password!</p>}
+              </div>
+
+              <div>
+              {error && <p className="mt-2 text-sm text-red-400">{error}</p>}
               </div>
 
               <div className="flex items-center justify-end">

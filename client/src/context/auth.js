@@ -40,17 +40,12 @@ function AuthProvider(props) {
   }
 
  // make a login request
-  async function signIn(values) {
-    try {
-      let result = await API.post('/auth/signin', values);
+  const signIn = (values) => {
+    return API.post('/auth/signin', values).then((result) => {
       if (result.status === 200) {
         handleAccessTokenChange(result.data.access_token);
-      } else {
-        console.log("failed");
       }
-    } catch (error) {
-      console.log("error");
-    }
+    });
   }
 
   // register the user
